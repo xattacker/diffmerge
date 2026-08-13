@@ -141,6 +141,13 @@ _unpack:	$(ZIP_PATHNAME)
 	mkdir -p $(MY_OSX_SDKS_PATHNAME)
 	tar --cd $(MY_OSX_SDKS_PATHNAME) -x -f $(MY_OSX_SDK_TARBALL_PATHNAME)
 	bzcat $(ARCHIVE_PATHNAME) | (cd $(ZIP_PATHNAME); tar -xf -)
+	## libpng's pngpriv.h wrongly treats any Apple platform (TARGET_OS_MAC
+	## is always defined on macOS/iOS) as classic Mac OS and tries to
+	## include the long-gone <fp.h> header instead of <math.h>. Collapse
+	## that block to a plain <math.h> include so modern SDKs (incl. arm64)
+	## build.
+	perl -0pi -e 's/#  if \(defined\(__MWERKS__\).*?#  endif\n/#  include <math.h>\n/s' \
+		$(SRC_PATHNAME)/src/png/pngpriv.h
 
 $(ZIP_PATHNAME):
 	mkdir -p $(ZIP_PATHNAME)
