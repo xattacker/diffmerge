@@ -120,6 +120,20 @@ ifeq ($(MODE),Release)
 	@strip $(TARGET)
 endif
 	@SetFile -t APPL $(TARGET)
+	@#
+	@# codesign refuses to sign anything carrying a resource fork or
+	@# Finder Info (e.g. the FinderInfo xattr that SetFile just added,
+	@# or detritus left over from copying the .icns/.pdf into the
+	@# bundle), so strip all extended attributes before signing.
+	@xattr -cr $(BUNDLE)
+	@#
+	@# Ad-hoc code sign the bundle so it satisfies the Apple Silicon
+	@# "must be signed to run" requirement. This is NOT a Developer ID
+	@# signature, so Gatekeeper will still flag the app as being from
+	@# an unidentified developer on other Macs (the quarantine flag
+	@# still needs to be cleared, or the user must right-click > Open).
+	@echo Ad-hoc signing $(BUNDLE)
+	codesign --force --deep -s - $(BUNDLE)
 
 
 ##################################################################
