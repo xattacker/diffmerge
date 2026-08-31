@@ -67,7 +67,22 @@ gui_frame * FrameFactory::openFirstFrame(const cl_args * pArgs,
 		// if they didn't give us any files/folders, we always have exit status 0.
 		wxGetApp().setExitStatusStatic(MY_EXIT_STATUS__OK);
 
-		return _createFirstFrame(pArgs);
+		// create the empty first frame to parent any dialogs.
+		gui_frame * pFrameFirst = _createFirstFrame(pArgs);
+
+		// no command-line args: behave as if the user immediately picked
+		// File > Open Folder Diff...  raise the Open Folders dialog and, if
+		// they pick a pair, recycle this empty frame into a folder diff.
+		// if they cancel, they just keep the empty window.
+		wxString s0, s1;
+		if (_raiseOpenFoldersDialog(pFrameFirst,NULL,s0,s1))
+		{
+			gui_frame * pFrameLoaded = openFolderFrame(s0,s1,NULL);
+			if (pFrameLoaded)
+				return pFrameLoaded;
+		}
+
+		return pFrameFirst;
 	}
 	
 	// if only one pathname given on command line -- possibly because the user
@@ -1422,3 +1437,4 @@ void FrameFactory::openFrameRequestedByFinderOrDND(gui_frame * pFrame,
 	}
 	
 }
+
